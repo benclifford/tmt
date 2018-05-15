@@ -75,7 +75,8 @@ materialiseContext ctx = do
   --       to a commit ID.
 
   for (tail ctx) $ \branch -> do
-    run $ "git merge --no-ff " ++ branch
+    let msg = "tmt: merging in " ++ branch
+    run $ "git merge --no-ff -m '" ++ msg ++ "' " ++ branch
 
   return ctx
 
