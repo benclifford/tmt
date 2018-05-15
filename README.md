@@ -7,6 +7,23 @@ changes committed onto a specific branch.
 A use case is to try out someone else's feature branches alongside
 your feature branches, without permanently tangling them together.
 
+# Comparison to stgit
+
+I like using stgit (https://github.com/ctmarinas/stgit) to keep
+different pieces of work separate (as patches) while also being able
+to use my local copy of a repo with several (or all) of those patches
+applied.
+
+That doesn't work so well for collaborative development - stgit patches
+aren't themselves versioned, so are hard to share.
+
+tmt is an attempt to get something like that workflow, but
+collaboratively. The equivalent to an stgit patch is a regular git
+branch. 'tmt' lets you combine a bunch of those regular branches
+into your work directory, and commit a change onto any of those
+branches. Regular git commands let you share those branches with
+other developers.
+
 # License
 
     tmt is Copyright (C) 2018 Ben Clifford
