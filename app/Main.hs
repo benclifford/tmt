@@ -2,6 +2,7 @@
 
 module Main where
 
+import Data.List (intersperse)
 import Data.Monoid (mempty)
 import Data.String (fromString)
 import qualified Data.Text as Text
@@ -36,9 +37,31 @@ main = do
     | cmd == "add" -> addBranch ctx (args !! 1)
     | cmd == "materialise" -> materialiseContext ctx
     | cmd == "status" -> showStatus ctx
+    | cmd == "on" -> runOn (tail args) ctx
     | True -> error "Unknown command"
 
   writeContext newCtx
+
+runOn :: [String] -> Context -> IO Context
+runOn args ctx = do
+  putStrLn $ "Context is: " ++ show ctx
+
+  -- TODO: we should check the HEAD commit is actually the last
+  -- commit we made using materialise, so as to not lose track
+  -- of commits that we've made
+
+  -- TODO: check that 'on' target is actually in the materialised
+  -- context (although this might be desirable to override in
+  -- some cases?)
+
+  -- hopefully this will keep any changes across the checkout
+  run $ "git checkout " ++ (args !! 0)
+  -- now run the command
+  runArgs $ tail args
+  -- now materialise again - potentially changed by the args command
+  newCtx <- materialiseContext ctx
+
+  return newCtx
 
 showStatus :: Context -> IO Context
 showStatus ctx = do
@@ -84,6 +107,13 @@ run :: String -> IO ()
 run command = do
   putStrLn $ "+ " ++ command 
   Turtle.shells (Text.pack command) mempty
+
+runArgs :: [String] -> IO ()
+runArgs commands = do
+  putStrLn $ "+ " ++ (concat $ intersperse " // " commands)
+  Turtle.procs (Text.pack (head commands))
+               (fmap Text.pack (tail commands))
+               mempty
 
 type BranchName = String
 
