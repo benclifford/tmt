@@ -24,6 +24,33 @@ into your work directory, and commit a change onto any of those
 branches. Regular git commands let you share those branches with
 other developers.
 
+# Usage
+
+All these commands need to happen in the root of your git checkout.
+
+Initialise: `echo '[]' > tmt-context`
+
+Show status: `tmt status`
+
+Add in a branch to the current mix: `tmt add <branchname>` - you'll
+need to add two branches for this to be interesting. (eg master,
+and a feature branch)
+
+Commit changes you've made locally onto a specific branch:
+`tmt on master git commit` (or, `tmt on <branch> <command>`)
+`tmt` will switch to that branch, carrying over uncommitted
+changes if `git` is capable of doing so, run the command,
+then materialise the full mix again. This is especially prone
+to breaking, and can't run anything that needs interactive UI
+(but hey, maybe all of that will get fixed?)
+
+
+Force `tmt` to regenerate the current mix: `tmt materialise`
+
+`tmt-context` is a human readable files containing the branches
+used in the current mix, and should be safe to edit by hand when
+you need to repair something that `tmt` can't deal with.
+
 # License
 
     tmt is Copyright (C) 2018 Ben Clifford
