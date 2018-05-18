@@ -41,8 +41,7 @@ Commit changes you've made locally onto a specific branch:
 `tmt` will switch to that branch, carrying over uncommitted
 changes if `git` is capable of doing so, run the command,
 then materialise the full mix again. This is especially prone
-to breaking, and can't run anything that needs interactive UI
-(but hey, maybe all of that will get fixed?)
+to breaking (but hey, maybe all of that will get fixed?)
 
 
 Force `tmt` to regenerate the current mix: `tmt materialise`

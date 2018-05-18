@@ -8,7 +8,7 @@ import Data.String (fromString)
 import qualified Data.Text as Text
 import Data.Traversable (for)
 import System.Environment (getArgs)
-import qualified Turtle as Turtle
+import qualified System.Process as Process
 
 import Lib
 
@@ -114,14 +114,12 @@ materialiseContext ctx = do
 run :: String -> IO ()
 run command = do
   putStrLn $ "+ " ++ command 
-  Turtle.shells (Text.pack command) mempty
+  Process.callCommand command
 
 runArgs :: [String] -> IO ()
 runArgs commands = do
   putStrLn $ "+ " ++ (concat $ intersperse " // " commands)
-  Turtle.procs (Text.pack (head commands))
-               (fmap Text.pack (tail commands))
-               mempty
+  Process.callProcess (head commands) (tail commands)
 
 type BranchName = String
 
