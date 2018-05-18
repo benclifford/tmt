@@ -132,10 +132,17 @@ type Context = [BranchName]
 readContext :: IO Context
 readContext = do
   putStrLn "Reading context"
-  read <$> readFile "tmt-context"
+  ctxPath <- getContextPath
+  read <$> readFile ctxPath
 
 writeContext :: Context -> IO ()
 writeContext ctx = do
   putStrLn $ "Write context: " ++ show ctx
-  ((writeFile "tmt-context") . show) ctx
+  ctxPath <- getContextPath
+  ((writeFile ctxPath) . show) ctx
   return ()
+
+getContextPath :: IO String
+getContextPath = do
+  p <- Process.readProcess "git" ["rev-parse", "--git-path", "tmt-context"] ""
+  return (head $ lines p)

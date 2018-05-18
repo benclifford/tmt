@@ -26,7 +26,7 @@ other developers.
 
 # Usage
 
-All these commands need to happen in the root of your git checkout.
+All these commands should be run somewhere in a git checkout.
 
 Initialise: `tmt init`
 
