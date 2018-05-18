@@ -23,23 +23,31 @@ main = do
   -- that can be a serialised Haskell value for now, in pwd
   -- but should go in .git eventually.
 
-  ctx <- readContext
-
-  putStrLn $ "Loaded context is: " ++ show ctx
-
   args <- getArgs
 
   let cmd = args !! 0
 
   putStrLn $ "Command is " ++ cmd
 
-  newCtx <- if
-    | cmd == "add" -> addBranch ctx (args !! 1)
-    | cmd == "materialise" -> materialiseContext ctx
-    | cmd == "status" -> showStatus ctx
-    | cmd == "on" -> runOn (tail args) ctx
+  if
+    | cmd == "init" -> initContext
+    | cmd == "add" -> withContext $ \ctx -> addBranch ctx (args !! 1)
+    | cmd == "materialise" -> withContext $ \ctx -> materialiseContext ctx
+    | cmd == "status" -> withContext $ \ctx -> showStatus ctx
+    | cmd == "on" -> withContext $ \ctx -> runOn (tail args) ctx
     | True -> error "Unknown command"
 
+
+initContext :: IO ()
+initContext = do
+  -- TODO: should check that there isn't a context already
+  writeContext []
+
+withContext :: (Context -> IO Context) -> IO ()
+withContext act = do
+  ctx <- readContext
+  putStrLn $ "Loaded context is: " ++ show ctx
+  newCtx <- act ctx
   writeContext newCtx
 
 runOn :: [String] -> Context -> IO Context

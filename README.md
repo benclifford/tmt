@@ -28,7 +28,7 @@ other developers.
 
 All these commands need to happen in the root of your git checkout.
 
-Initialise: `echo '[]' > tmt-context`
+Initialise: `tmt init`
 
 Show status: `tmt status`
 
