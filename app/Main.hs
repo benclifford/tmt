@@ -46,13 +46,13 @@ initContext = do
 withContext :: (Context -> IO Context) -> IO ()
 withContext act = do
   ctx <- readContext
-  putStrLn $ "Loaded context is: " ++ show ctx
+  putStrLn $ "Loaded context is: " ++ formatContext ctx
   newCtx <- act ctx
   writeContext newCtx
 
 runOn :: [String] -> Context -> IO Context
 runOn args ctx = do
-  putStrLn $ "Context is: " ++ show ctx
+  putStrLn $ "Context is: " ++ formatContext ctx
 
   -- TODO: we should check the HEAD commit is actually the last
   -- commit we made using materialise, so as to not lose track
@@ -73,7 +73,7 @@ runOn args ctx = do
 
 showStatus :: Context -> IO Context
 showStatus ctx = do
-  putStrLn $ "Context is: " ++ show ctx
+  putStrLn $ "Context is: " ++ formatContext ctx
   return ctx
 
 addBranch :: Context -> BranchName -> IO Context
@@ -94,7 +94,7 @@ addBranch ctx branchName = do
 --   not a branch name, and then merging in other stuff.
 materialiseContext :: Context -> IO Context
 materialiseContext ctx = do
-  putStrLn $ "Materialising context: " ++ show ctx
+  putStrLn $ "Materialising context: " ++ formatContext ctx
 
   -- Checkout commit ID of head of context, detached so that
   -- we can make new commits which are not changing branch refs.
@@ -137,7 +137,7 @@ readContext = do
 
 writeContext :: Context -> IO ()
 writeContext ctx = do
-  putStrLn $ "Write context: " ++ show ctx
+  putStrLn $ "Write context: " ++ formatContext ctx
   ctxPath <- getContextPath
   ((writeFile ctxPath) . show) ctx
   return ()
@@ -146,3 +146,6 @@ getContextPath :: IO String
 getContextPath = do
   p <- Process.readProcess "git" ["rev-parse", "--git-path", "tmt-context"] ""
   return (head $ lines p)
+
+formatContext :: Context -> String
+formatContext ctx = concat $ intersperse ", " $ ctx
