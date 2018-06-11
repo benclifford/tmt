@@ -31,6 +31,7 @@ main = do
     | cmd == "init" -> initContext
     | cmd == "add" -> withContext $ \ctx -> addBranch ctx (args !! 1)
     | cmd == "materialise" -> withContext $ \ctx -> materialiseContext ctx
+    | cmd == "materialize" -> withContext $ \ctx -> materialiseContext ctx
     | cmd == "status" -> withContext $ \ctx -> showStatus ctx
     | cmd == "on" -> withContext $ \ctx -> runOn (tail args) ctx
     | True -> error $ "Unknown command: " ++ cmd
