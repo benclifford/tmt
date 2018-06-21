@@ -2,6 +2,7 @@
 
 module Main where
 
+import Control.Monad (void)
 import Data.List (intersperse)
 import Data.Monoid (mempty)
 import Data.String (fromString)
@@ -73,7 +74,9 @@ runOn args ctx = do
 showStatus :: Context -> IO Context
 showStatus ctx = do
   putStrLn $ "Context is: "
-  for ctx $ \c -> putStrLn $ "> merge " ++ c
+  case ctx of
+    [] -> void $ putStrLn ". empty"
+    _ -> void $ for ctx $ \c -> putStrLn $ "> merge " ++ c
   return ctx
 
 addBranch :: Context -> BranchName -> IO Context
