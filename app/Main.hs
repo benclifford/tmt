@@ -72,7 +72,8 @@ runOn args ctx = do
 
 showStatus :: Context -> IO Context
 showStatus ctx = do
-  putStrLn $ "Context is: " ++ formatContext ctx
+  putStrLn $ "Context is: "
+  for ctx $ \c -> putStrLn $ "> merge " ++ c
   return ctx
 
 addBranch :: Context -> BranchName -> IO Context
