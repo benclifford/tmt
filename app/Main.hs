@@ -63,13 +63,26 @@ runOn args ctx = do
   -- some cases?)
 
   -- hopefully this will keep any changes across the checkout
-  run $ "git checkout " ++ (args !! 0)
+  stashOver $ run $ "git checkout " ++ (args !! 0)
   -- now run the command
   runArgs $ tail args
   -- now materialise again - potentially changed by the args command
   newCtx <- materialiseContext ctx
 
   return newCtx
+
+-- | Does a git stash, runs the action, and pops the stash.
+-- This is intended to allow switching to a branch (in the supplied
+-- action) and preserving uncommitted changes.
+-- TODO: error handling: if the action throws an error, we should
+-- log that a stash has been made, before passing on the error, so
+-- that the user gets told where their changes have disappeared to.
+stashOver :: IO a -> IO a
+stashOver act = do
+  run "git stash"
+  r <- act
+  run "git stash pop"
+  return r
 
 showStatus :: Context -> IO Context
 showStatus ctx = do
