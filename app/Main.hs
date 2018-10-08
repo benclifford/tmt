@@ -173,7 +173,8 @@ writeContext ctx = do
 
 getContextPath :: IO String
 getContextPath = do
-  p <- Process.readProcess "git" ["rev-parse", "--git-path", "tmt-context"] ""
+  p <- Process.readProcess "sh" ["-c",
+    "GIT_DIR=$(readlink -f $(git rev-parse --git-dir)) git rev-parse --git-path tmt-context"] ""
   return (head $ lines p)
 
 formatContext :: Context -> String
