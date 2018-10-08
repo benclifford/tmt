@@ -80,10 +80,22 @@ runOn args ctx = do
 -- that the user gets told where their changes have disappeared to.
 stashOver :: IO a -> IO a
 stashOver act = do
-  run "git stash"
+  checkStashEmpty
+  run "git stash save 'WIP from tmt stashOver'"
   r <- act
-  run "git stash pop"
+  em <- isStashEmpty
+  when (not em) $ run "git stash pop"
   return r
+
+checkStashEmpty :: IO ()
+checkStashEmpty = do
+  em <- isStashEmpty
+  when (not em) $ error "This tmt mode cannot operate with a non-empty git stash"
+
+isStashEmpty :: IO Bool
+isStashEmpty = do
+  s <- runRead "git stash list"
+  return (s == "")
 
 showStatus :: Context -> IO Context
 showStatus ctx = do
@@ -149,6 +161,11 @@ runArgs :: [String] -> IO ()
 runArgs commands = do
   putStrLn $ "+ " ++ (concat $ intersperse " // " commands)
   Process.callProcess (head commands) (tail commands)
+
+runRead :: String -> IO String
+runRead command = do
+  putStrLn $ "+ " ++ command
+  Process.readCreateProcess (Process.shell command) ""
 
 type BranchName = String
 
