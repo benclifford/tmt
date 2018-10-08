@@ -2,7 +2,7 @@
 
 module Main where
 
-import Control.Monad (void)
+import Control.Monad (void, when)
 import Data.List (intersperse)
 import Data.Monoid (mempty)
 import Data.String (fromString)
@@ -31,6 +31,7 @@ main = do
   if
     | cmd == "init" -> initContext
     | cmd == "add" -> withContext $ \ctx -> addBranch ctx (args !! 1)
+    | cmd == "remove" -> withContext $ \ctx -> removeBranch ctx (args !! 1)
     | cmd == "materialise" -> withContext $ \ctx -> materialiseContext ctx
     | cmd == "materialize" -> withContext $ \ctx -> materialiseContext ctx
     | cmd == "status" -> withContext $ \ctx -> showStatus ctx
@@ -103,6 +104,18 @@ addBranch ctx branchName = do
 
   materialiseContext newCtx
   return newCtx
+
+removeBranch :: Context -> BranchName -> IO Context
+removeBranch ctx branchName = do
+  putStrLn $ "Removing branch " ++ branchName
+
+  let newCtx = filter (/= branchName) ctx
+
+  when (newCtx == ctx) $ error $ "No branch " ++ branchName ++ " was removed"
+
+  materialiseContext newCtx
+  return newCtx
+
 
 -- | Given a desired context, make the current checkout
 --   look like that.
