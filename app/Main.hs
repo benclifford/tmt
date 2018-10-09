@@ -9,12 +9,14 @@ import Data.String (fromString)
 import qualified Data.Text as Text
 import Data.Traversable (for)
 import System.Environment (getArgs)
+import qualified System.Exit as Exit
 import qualified System.Process as Process
 
 import Lib
 
 main :: IO ()
 main = do
+  r <- isRerereEnabled
   putStrLn "tmt: temporary merge tool"
 
   -- there should be a tmt context
@@ -148,9 +150,30 @@ materialiseContext ctx = do
 
   for (tail ctx) $ \branch -> do
     let msg = "tmt: merging in " ++ branch
-    run $ "git merge --no-ff -m '" ++ msg ++ "' " ++ branch
+    mergeRerere msg branch
 
   return ctx
+
+mergeRerere msg branch = do
+    rerere <- isRerereEnabled
+    if not rerere
+
+    -- a simple merge, throwing an exception if there is an error
+    then run $ "git merge --no-ff -m '" ++ msg ++ "' " ++ branch
+
+    else do
+      (mergeExit,mergeStdout, mergeStderr) <- runReadRet $ "git merge --no-ff -m '" ++ msg ++ "' " ++ branch
+      when (mergeExit /= Exit.ExitSuccess) $ do
+        putStrLn "Merge failed"
+        putStrLn "Merge stdout:"
+        putStrLn mergeStdout
+        putStrLn "Merge stderr:"
+        putStrLn mergeStderr
+        (remainingExit,rerereStdout,rerereStderr) <- runReadRet "git rerere remaining"
+        if | remainingExit == Exit.ExitSuccess && rerereStdout == "" -> do
+               putStrLn "git rerere reports no remaining conflicts, so committing"
+               run $ "git commit -a -m '" ++ msg ++ " -- attempted rerere fix'"
+           | True -> error "rerere was not able to fix everything"
 
 run :: String -> IO ()
 run command = do
@@ -166,6 +189,11 @@ runRead :: String -> IO String
 runRead command = do
   putStrLn $ "+ " ++ command
   Process.readCreateProcess (Process.shell command) ""
+
+runReadRet :: String -> IO (Exit.ExitCode, String, String)
+runReadRet command = do
+  putStrLn $ "+ " ++ command
+  Process.readCreateProcessWithExitCode (Process.shell command) ""
 
 type BranchName = String
 
@@ -196,3 +224,16 @@ getContextPath = do
 
 formatContext :: Context -> String
 formatContext ctx = concat $ intersperse ", " $ ctx
+
+getGitConfig :: String -> IO (Maybe String)
+getGitConfig key = do
+  (exit, stdout, stderr) <- runReadRet ("git config " ++ key)
+  case exit of
+    Exit.ExitSuccess -> return (Just stdout)
+    _ -> return Nothing
+
+isRerereEnabled :: IO Bool
+isRerereEnabled = do
+  mc <- getGitConfig "rerere.enabled"
+  return (mc == (Just "1\n"))
+
