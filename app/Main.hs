@@ -211,7 +211,7 @@ readContext = do
 
 writeContext :: Context -> IO ()
 writeContext ctx = do
-  putStrLn $ "tmt: Write context: " ++ formatContext ctx
+  putStrLn $ "tmt: Writing context: " ++ formatContext ctx
   ctxPath <- getContextPath
   ((writeFile ctxPath) . show) ctx
   return ()
