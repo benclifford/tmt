@@ -49,13 +49,13 @@ initContext = do
 withContext :: (Context -> IO Context) -> IO ()
 withContext act = do
   ctx <- readContext
-  putStrLn $ "Loaded context is: " ++ formatContext ctx
+  putStrLn $ "tmt: Loaded context is: " ++ formatContext ctx
   newCtx <- act ctx
   writeContext newCtx
 
 runOn :: [String] -> Context -> IO Context
 runOn args ctx = do
-  putStrLn $ "Context is: " ++ formatContext ctx
+  putStrLn $ "tmt: Context is: " ++ formatContext ctx
 
   -- TODO: we should check the HEAD commit is actually the last
   -- commit we made using materialise, so as to not lose track
@@ -101,7 +101,7 @@ isStashEmpty = do
 
 showStatus :: Context -> IO Context
 showStatus ctx = do
-  putStrLn $ "Context is: "
+  putStrLn $ "tmt: Context is: "
   case ctx of
     [] -> void $ putStrLn ". empty"
     _ -> void $ for ctx $ \c -> putStrLn $ "> merge " ++ c
@@ -109,7 +109,7 @@ showStatus ctx = do
 
 addBranch :: Context -> BranchName -> IO Context
 addBranch ctx branchName = do
-  putStrLn $ "Adding branch " ++ branchName
+  putStrLn $ "tmt: Adding branch " ++ branchName
 
   -- Additions should happen deliberately on the end so that the
   -- head of the context keeps a special position as the "main"
@@ -121,7 +121,7 @@ addBranch ctx branchName = do
 
 removeBranch :: Context -> BranchName -> IO Context
 removeBranch ctx branchName = do
-  putStrLn $ "Removing branch " ++ branchName
+  putStrLn $ "tmt: Removing branch " ++ branchName
 
   let newCtx = filter (/= branchName) ctx
 
@@ -137,7 +137,7 @@ removeBranch ctx branchName = do
 --   not a branch name, and then merging in other stuff.
 materialiseContext :: Context -> IO Context
 materialiseContext ctx = do
-  putStrLn $ "Materialising context: " ++ formatContext ctx
+  putStrLn $ "tmt: Materialising context: " ++ formatContext ctx
 
   -- Checkout commit ID of head of context, detached so that
   -- we can make new commits which are not changing branch refs.
@@ -164,14 +164,14 @@ mergeRerere msg branch = do
     else do
       (mergeExit,mergeStdout, mergeStderr) <- runReadRet $ "git merge --no-ff -m '" ++ msg ++ "' " ++ branch
       when (mergeExit /= Exit.ExitSuccess) $ do
-        putStrLn "Merge failed"
-        putStrLn "Merge stdout:"
+        putStrLn "tmt: Merge failed"
+        putStrLn "tmt: Merge stdout:"
         putStrLn mergeStdout
-        putStrLn "Merge stderr:"
+        putStrLn "tmt: Merge stderr:"
         putStrLn mergeStderr
         (remainingExit,rerereStdout,rerereStderr) <- runReadRet "git rerere remaining"
         if | remainingExit == Exit.ExitSuccess && rerereStdout == "" -> do
-               putStrLn "git rerere reports no remaining conflicts, so committing"
+               putStrLn "tmt: git rerere reports no remaining conflicts, so committing"
                run $ "git commit -a -m '" ++ msg ++ " -- attempted rerere fix'"
            | True -> error "rerere was not able to fix everything"
 
@@ -205,13 +205,13 @@ type Context = [BranchName]
 
 readContext :: IO Context
 readContext = do
-  putStrLn "Reading context"
+  putStrLn "tmt: Reading context"
   ctxPath <- getContextPath
   read <$> readFile ctxPath
 
 writeContext :: Context -> IO ()
 writeContext ctx = do
-  putStrLn $ "Write context: " ++ formatContext ctx
+  putStrLn $ "tmt: Write context: " ++ formatContext ctx
   ctxPath <- getContextPath
   ((writeFile ctxPath) . show) ctx
   return ()
