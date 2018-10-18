@@ -50,6 +50,27 @@ Force `tmt` to regenerate the current mix: `tmt materialise`
 used in the current mix, and should be safe to edit by hand when
 you need to repair something that `tmt` can't deal with.
 
+# `git rerere`
+
+tmt knows about `git rerere`. This can make the repeated materialisation
+of conflicting branches substantially more user friendly.
+
+Turn `git rerere` on by typing:
+
+```
+git config --local rerere.enabled 1
+```
+
+and then fix and commit merge conflicts as before.
+
+When a previously seen merge conflict is encountered during
+`tmt materialise`, `git rerere` will be used to replay the
+resolution, allowing the merge to complete successfully.
+
+The user interface flow for this is a little awkward: you will see
+the initial `git merge` fail, followed by `tmt` fixing up the
+merge failure using `git rerere`.
+
 # License
 
     tmt is Copyright (C) 2018 Ben Clifford
