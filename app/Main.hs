@@ -33,6 +33,7 @@ main = do
   if
     | cmd == "init" -> initContext
     | cmd == "add" -> withContext $ \ctx -> addBranch ctx (args !! 1)
+    | cmd == "prepend" -> withContext $ \ctx -> prependBranch ctx (args !! 1)
     | cmd == "remove" -> withContext $ \ctx -> removeBranch ctx (args !! 1)
     | cmd == "materialise" -> withContext $ \ctx -> materialiseContext ctx
     | cmd == "materialize" -> withContext $ \ctx -> materialiseContext ctx
@@ -106,6 +107,21 @@ showStatus ctx = do
     [] -> void $ putStrLn ". empty"
     _ -> void $ for ctx $ \c -> putStrLn $ "> merge " ++ c
   return ctx
+
+prependBranch :: Context -> BranchName -> IO Context
+prependBranch ctx branchName = do
+  putStrLn $ "tmt: Adding branch " ++ branchName
+
+  -- Adds onto the start of the stack - perhaps because branch
+  -- is intended to be "closer" to master than the branches near
+  -- the end. (closer = less divergant, intended to be merged
+  -- sooner?)
+
+  let newCtx = [branchName] ++ ctx
+
+  materialiseContext newCtx
+  return newCtx
+
 
 addBranch :: Context -> BranchName -> IO Context
 addBranch ctx branchName = do
