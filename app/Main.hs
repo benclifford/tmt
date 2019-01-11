@@ -32,6 +32,8 @@ main = do
     | cmd == "remove" -> withContext $ \ctx -> removeBranch ctx (args !! 1)
     | cmd == "materialise" -> withContext $ \ctx -> materialiseContext ctx
     | cmd == "materialize" -> withContext $ \ctx -> materialiseContext ctx
+    | cmd == "materialise-adhoc" -> materialiseAdhocContext (tail args)
+    | cmd == "materialize-adhoc" -> materialiseAdhocContext (tail args)
     | cmd == "status" -> withContext $ \ctx -> showStatus ctx
     | cmd == "on" -> withContext $ \ctx -> runOn (tail args) ctx
     | True -> error $ "Unknown command: " ++ cmd
@@ -161,6 +163,17 @@ materialiseContext ctx = do
     mergeRerere msg branch
 
   return ctx
+
+-- | Given a list of branches to merge together, create an ad-hoc
+--   merge of them without modifying the list of branches in the
+--   context file. This allows a different combination of branches
+--   to be merged on the fly, without needing to rearrange the
+--   context.
+materialiseAdhocContext :: [String] -> IO ()
+materialiseAdhocContext branches = do
+  putStrLn $ "tmt: Materialising ad-hoc context: " ++ show branches
+  void $ materialiseContext branches
+  putStrLn "tmt: Ad-hoc materialisation complete"
 
 mergeRerere :: String -> String -> IO ()
 mergeRerere msg branch = do
