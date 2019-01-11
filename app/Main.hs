@@ -12,7 +12,7 @@ import qualified System.Process as Process
 
 main :: IO ()
 main = do
-  putStrLn "tmt: temporary merge tool"
+  logInfo "temporary merge tool"
 
   -- there should be a tmt context
   -- that knows which branches we've claimed to put in
@@ -47,13 +47,13 @@ initContext = do
 withContext :: (Context -> IO Context) -> IO ()
 withContext act = do
   ctx <- readContext
-  putStrLn $ "tmt: Loaded context is: " ++ formatContext ctx
+  logInfo $ "Loaded context is: " ++ formatContext ctx
   newCtx <- act ctx
   writeContext newCtx
 
 runOn :: [String] -> Context -> IO Context
 runOn args ctx = do
-  putStrLn $ "tmt: Context is: " ++ formatContext ctx
+  logInfo $ "Context is: " ++ formatContext ctx
 
   -- TODO: we should check the HEAD commit is actually the last
   -- commit we made using materialise, so as to not lose track
@@ -99,7 +99,7 @@ isStashEmpty = do
 
 showStatus :: Context -> IO Context
 showStatus ctx = do
-  putStrLn $ "tmt: Context is: "
+  logInfo $ "Context is: "
   case ctx of
     [] -> void $ putStrLn ". empty"
     _ -> void $ for ctx $ \c -> putStrLn $ "> merge " ++ c
@@ -107,7 +107,7 @@ showStatus ctx = do
 
 prependBranch :: Context -> BranchName -> IO Context
 prependBranch ctx branchName = do
-  putStrLn $ "tmt: Adding branch " ++ branchName
+  logInfo $ "Adding branch " ++ branchName
 
   -- Adds onto the start of the stack - perhaps because branch
   -- is intended to be "closer" to master than the branches near
@@ -121,7 +121,7 @@ prependBranch ctx branchName = do
 
 addBranch :: Context -> BranchName -> IO Context
 addBranch ctx branchName = do
-  putStrLn $ "tmt: Adding branch " ++ branchName
+  logInfo $ "Adding branch " ++ branchName
 
   -- Additions should happen deliberately on the end so that the
   -- head of the context keeps a special position as the "main"
@@ -132,7 +132,7 @@ addBranch ctx branchName = do
 
 removeBranch :: Context -> BranchName -> IO Context
 removeBranch ctx branchName = do
-  putStrLn $ "tmt: Removing branch " ++ branchName
+  logInfo $ "Removing branch " ++ branchName
 
   let newCtx = filter (/= branchName) ctx
 
@@ -147,7 +147,7 @@ removeBranch ctx branchName = do
 --   not a branch name, and then merging in other stuff.
 materialiseContext :: Context -> IO Context
 materialiseContext ctx = do
-  putStrLn $ "tmt: Materialising context: " ++ formatContext ctx
+  logInfo $ "Materialising context: " ++ formatContext ctx
 
   -- Checkout commit ID of head of context, detached so that
   -- we can make new commits which are not changing branch refs.
@@ -171,9 +171,9 @@ materialiseContext ctx = do
 --   context.
 materialiseAdhocContext :: [String] -> IO ()
 materialiseAdhocContext branches = do
-  putStrLn $ "tmt: Materialising ad-hoc context: " ++ show branches
+  logInfo $ "Materialising ad-hoc context: " ++ show branches
   void $ materialiseContext branches
-  putStrLn "tmt: Ad-hoc materialisation complete"
+  logInfo "Ad-hoc materialisation complete"
 
 mergeRerere :: String -> String -> IO ()
 mergeRerere msg branch = do
@@ -186,14 +186,14 @@ mergeRerere msg branch = do
     else do
       (mergeExit,mergeStdout, mergeStderr) <- runReadRet $ "git merge --no-ff -m '" ++ msg ++ "' " ++ branch
       when (mergeExit /= Exit.ExitSuccess) $ do
-        putStrLn "tmt: Merge failed"
-        putStrLn "tmt: Merge stdout:"
+        logInfo "Merge failed"
+        logInfo "Merge stdout:"
         putStrLn mergeStdout
-        putStrLn "tmt: Merge stderr:"
+        logInfo "Merge stderr:"
         putStrLn mergeStderr
         (remainingExit,rerereStdout,_rerereStderr) <- runReadRet "git rerere remaining"
         if | remainingExit == Exit.ExitSuccess && rerereStdout == "" -> do
-               putStrLn "tmt: git rerere reports no remaining conflicts, so committing"
+               logInfo "git rerere reports no remaining conflicts, so committing"
                run $ "git commit -a -m '" ++ msg ++ " -- attempted rerere fix'"
            | True -> error "rerere was not able to fix everything"
 
@@ -227,13 +227,13 @@ type Context = [BranchName]
 
 readContext :: IO Context
 readContext = do
-  putStrLn "tmt: Reading context"
+  logInfo "Reading context"
   ctxPath <- getContextPath
   read <$> readFile ctxPath
 
 writeContext :: Context -> IO ()
 writeContext ctx = do
-  putStrLn $ "tmt: Writing context: " ++ formatContext ctx
+  logInfo $ "Writing context: " ++ formatContext ctx
   ctxPath <- getContextPath
   ((writeFile ctxPath) . show) ctx
   return ()
@@ -258,4 +258,7 @@ isRerereEnabled :: IO Bool
 isRerereEnabled = do
   mc <- getGitConfig "rerere.enabled"
   return (mc == (Just "1\n"))
+
+logInfo :: String -> IO ()
+logInfo msg = putStrLn ("tmt: " ++ msg)
 
