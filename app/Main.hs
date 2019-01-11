@@ -1,22 +1,17 @@
 {-# Language MultiWayIf #-}
+{-# OPTIONS_GHC -Wall -Werror #-}
 
 module Main where
 
 import Control.Monad (void, when)
 import Data.List (intersperse)
-import Data.Monoid (mempty)
-import Data.String (fromString)
-import qualified Data.Text as Text
 import Data.Traversable (for)
 import System.Environment (getArgs)
 import qualified System.Exit as Exit
 import qualified System.Process as Process
 
-import Lib
-
 main :: IO ()
 main = do
-  r <- isRerereEnabled
   putStrLn "tmt: temporary merge tool"
 
   -- there should be a tmt context
@@ -120,7 +115,6 @@ prependBranch ctx branchName = do
   let newCtx = [branchName] ++ ctx
 
   materialiseContext newCtx
-  return newCtx
 
 
 addBranch :: Context -> BranchName -> IO Context
@@ -133,7 +127,6 @@ addBranch ctx branchName = do
   let newCtx = ctx ++ [branchName]
 
   materialiseContext newCtx
-  return newCtx
 
 removeBranch :: Context -> BranchName -> IO Context
 removeBranch ctx branchName = do
@@ -144,7 +137,6 @@ removeBranch ctx branchName = do
   when (newCtx == ctx) $ error $ "No branch " ++ branchName ++ " was removed"
 
   materialiseContext newCtx
-  return newCtx
 
 
 -- | Given a desired context, make the current checkout
@@ -164,12 +156,13 @@ materialiseContext ctx = do
   --       entry - unlike the HEAD, it doesn't need to be resolved
   --       to a commit ID.
 
-  for (tail ctx) $ \branch -> do
+  void $ for (tail ctx) $ \branch -> do
     let msg = "tmt: merging in " ++ branch
     mergeRerere msg branch
 
   return ctx
 
+mergeRerere :: String -> String -> IO ()
 mergeRerere msg branch = do
     rerere <- isRerereEnabled
     if not rerere
@@ -185,7 +178,7 @@ mergeRerere msg branch = do
         putStrLn mergeStdout
         putStrLn "tmt: Merge stderr:"
         putStrLn mergeStderr
-        (remainingExit,rerereStdout,rerereStderr) <- runReadRet "git rerere remaining"
+        (remainingExit,rerereStdout,_rerereStderr) <- runReadRet "git rerere remaining"
         if | remainingExit == Exit.ExitSuccess && rerereStdout == "" -> do
                putStrLn "tmt: git rerere reports no remaining conflicts, so committing"
                run $ "git commit -a -m '" ++ msg ++ " -- attempted rerere fix'"
@@ -243,7 +236,7 @@ formatContext ctx = concat $ intersperse ", " $ ctx
 
 getGitConfig :: String -> IO (Maybe String)
 getGitConfig key = do
-  (exit, stdout, stderr) <- runReadRet ("git config " ++ key)
+  (exit, stdout, _stderr) <- runReadRet ("git config " ++ key)
   case exit of
     Exit.ExitSuccess -> return (Just stdout)
     _ -> return Nothing
