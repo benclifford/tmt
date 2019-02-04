@@ -23,6 +23,7 @@ main = do
 
   args <- getArgs
 
+  when (length args == 0) $ error "Must supply a tmt subcommand"
   let cmd = args !! 0
 
   if
