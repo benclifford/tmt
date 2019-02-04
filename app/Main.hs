@@ -12,7 +12,7 @@ import qualified System.Process as Process
 
 main :: IO ()
 main = do
-  logInfo "temporary merge tool"
+  logDebug "temporary merge tool"
 
   -- there should be a tmt context
   -- that knows which branches we've claimed to put in
@@ -47,13 +47,13 @@ initContext = do
 withContext :: (Context -> IO Context) -> IO ()
 withContext act = do
   ctx <- readContext
-  logInfo $ "Loaded context is: " ++ formatContext ctx
+  logDebug $ "Loaded context is: " ++ formatContext ctx
   newCtx <- act ctx
   writeContext newCtx
 
 runOn :: [String] -> Context -> IO Context
 runOn args ctx = do
-  logInfo $ "Context is: " ++ formatContext ctx
+  logDebug $ "Context is: " ++ formatContext ctx
 
   -- TODO: we should check the HEAD commit is actually the last
   -- commit we made using materialise, so as to not lose track
@@ -186,7 +186,7 @@ mergeRerere msg branch = do
     else do
       (mergeExit,mergeStdout, mergeStderr) <- runReadRet $ "git merge --no-ff -m '" ++ msg ++ "' " ++ branch
       when (mergeExit /= Exit.ExitSuccess) $ do
-        logInfo "Merge failed"
+        logError "Merge failed"
         logInfo "Merge stdout:"
         putStrLn mergeStdout
         logInfo "Merge stderr:"
@@ -227,13 +227,13 @@ type Context = [BranchName]
 
 readContext :: IO Context
 readContext = do
-  logInfo "Reading context"
+  logDebug "Reading context"
   ctxPath <- getContextPath
   read <$> readFile ctxPath
 
 writeContext :: Context -> IO ()
 writeContext ctx = do
-  logInfo $ "Writing context: " ++ formatContext ctx
+  logDebug $ "Writing context: " ++ formatContext ctx
   ctxPath <- getContextPath
   ((writeFile ctxPath) . show) ctx
   return ()
@@ -259,6 +259,11 @@ isRerereEnabled = do
   mc <- getGitConfig "rerere.enabled"
   return (mc == (Just "1\n"))
 
+logError :: String -> IO ()
+logError msg = putStrLn ("tmt: " ++ msg)
+
 logInfo :: String -> IO ()
 logInfo msg = putStrLn ("tmt: " ++ msg)
 
+logDebug :: String -> IO ()
+logDebug msg = putStrLn ("tmt: " ++ msg)
