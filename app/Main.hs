@@ -6,7 +6,9 @@ module Main where
 import Control.Monad (void, when)
 import Data.List (intersperse)
 import Data.Traversable (for)
+import qualified System.Console.ANSI as ANSI
 import System.Environment (getArgs)
+import qualified System.IO as IO
 import qualified System.Exit as Exit
 import qualified System.Process as Process
 
@@ -261,10 +263,31 @@ isRerereEnabled = do
   return (mc == (Just "1\n"))
 
 logError :: String -> IO ()
-logError msg = putStrLn ("tmt: " ++ msg)
+logError msg = 
+  logWithSGR
+    [ANSI.Reset, ANSI.SetColor ANSI.Foreground ANSI.Dull ANSI.Red]
+    msg
 
 logInfo :: String -> IO ()
-logInfo msg = putStrLn ("tmt: " ++ msg)
+logInfo msg = 
+  logWithSGR
+    [ANSI.Reset, ANSI.SetColor ANSI.Foreground ANSI.Dull ANSI.White]
+    msg
 
 logDebug :: String -> IO ()
-logDebug msg = putStrLn ("tmt: " ++ msg)
+logDebug msg = 
+  logWithSGR
+    [ANSI.Reset, ANSI.SetColor ANSI.Foreground ANSI.Dull ANSI.Yellow]
+    msg
+
+logWithSGR :: [ANSI.SGR] -> String -> IO ()
+logWithSGR sgr msg = do
+  setSGRIfAvailable sgr
+  putStrLn ("tmt: " ++ msg)
+  setSGRIfAvailable [ANSI.Reset]
+
+setSGRIfAvailable :: [ANSI.SGR] -> IO ()
+setSGRIfAvailable sgr = do
+  p <- ANSI.hSupportsANSI IO.stdout
+  when p $ ANSI.setSGR sgr
+

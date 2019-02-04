@@ -42,6 +42,7 @@ executables:
     - -static
     dependencies:
     - tmt
+    - ansi-terminal
 
 tests:
   tmt-test:
