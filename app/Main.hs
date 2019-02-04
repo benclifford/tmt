@@ -285,6 +285,7 @@ logWithSGR sgr msg = do
   setSGRIfAvailable sgr
   putStrLn ("tmt: " ++ msg)
   setSGRIfAvailable [ANSI.Reset]
+  IO.hFlush IO.stdout
 
 setSGRIfAvailable :: [ANSI.SGR] -> IO ()
 setSGRIfAvailable sgr = do
