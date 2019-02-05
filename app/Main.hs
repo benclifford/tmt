@@ -12,6 +12,7 @@ import qualified System.Exit as Exit
 import qualified System.Process as Process
 
 import qualified Options
+import qualified Run
 import Types
 
 main :: IO ()
@@ -63,9 +64,9 @@ runOn args ctx = do
   -- some cases?)
 
   -- hopefully this will keep any changes across the checkout
-  stashOver $ run $ "git checkout " ++ (args !! 0)
+  stashOver $ Run.run $ "git checkout " ++ (args !! 0)
   -- now run the command
-  runArgs $ tail args
+  Run.runArgs $ tail args
   -- now materialise again - potentially changed by the args command
   newCtx <- materialiseContext ctx
 
@@ -80,10 +81,10 @@ runOn args ctx = do
 stashOver :: IO a -> IO a
 stashOver act = do
   checkStashEmpty
-  run "git stash save 'WIP from tmt stashOver'"
+  Run.run "git stash save 'WIP from tmt stashOver'"
   r <- act
   em <- isStashEmpty
-  when (not em) $ run "git stash pop"
+  when (not em) $ Run.run "git stash pop"
   return r
 
 checkStashEmpty :: IO ()
@@ -93,7 +94,7 @@ checkStashEmpty = do
 
 isStashEmpty :: IO Bool
 isStashEmpty = do
-  s <- runRead "git stash list"
+  s <- Run.runRead "git stash list"
   return (s == "")
 
 showStatus :: Context -> IO Context
@@ -151,7 +152,7 @@ materialiseContext ctx = do
   -- Checkout commit ID of head of context, detached so that
   -- we can make new commits which are not changing branch refs.
 
-  run $ "git checkout --detach " ++ head ctx
+  Run.run $ "git checkout --detach " ++ head ctx
 
   void $ for (tail ctx) $ \branch -> do
     let msg = "tmt: merging in " ++ branch
@@ -176,41 +177,21 @@ mergeRerere msg branch = do
     if not rerere
 
     -- a simple merge, throwing an exception if there is an error
-    then run $ "git merge --no-ff -m '" ++ msg ++ "' " ++ branch
+    then Run.run $ "git merge --no-ff -m '" ++ msg ++ "' " ++ branch
 
     else do
-      (mergeExit,mergeStdout, mergeStderr) <- runReadRet $ "git merge --no-ff -m '" ++ msg ++ "' " ++ branch
+      (mergeExit,mergeStdout, mergeStderr) <- Run.runReadRet $ "git merge --no-ff -m '" ++ msg ++ "' " ++ branch
       when (mergeExit /= Exit.ExitSuccess) $ do
         logError "Merge failed"
         logInfo "Merge stdout:"
         putStrLn mergeStdout
         logInfo "Merge stderr:"
         putStrLn mergeStderr
-        (remainingExit,rerereStdout,_rerereStderr) <- runReadRet "git rerere remaining"
+        (remainingExit,rerereStdout,_rerereStderr) <- Run.runReadRet "git rerere remaining"
         if | remainingExit == Exit.ExitSuccess && rerereStdout == "" -> do
                logInfo "git rerere reports no remaining conflicts, so committing"
-               run $ "git commit -a -m '" ++ msg ++ " -- attempted rerere fix'"
+               Run.run $ "git commit -a -m '" ++ msg ++ " -- attempted rerere fix'"
            | True -> error "rerere was not able to fix everything"
-
-run :: String -> IO ()
-run command = do
-  putStrLn $ "+ " ++ command 
-  Process.callCommand command
-
-runArgs :: [String] -> IO ()
-runArgs commands = do
-  putStrLn $ "+ " ++ (concat $ intersperse " // " commands)
-  Process.callProcess (head commands) (tail commands)
-
-runRead :: String -> IO String
-runRead command = do
-  putStrLn $ "+ " ++ command
-  Process.readCreateProcess (Process.shell command) ""
-
-runReadRet :: String -> IO (Exit.ExitCode, String, String)
-runReadRet command = do
-  putStrLn $ "+ " ++ command
-  Process.readCreateProcessWithExitCode (Process.shell command) ""
 
 -- | Represents the stored context. At present, that is the list of
 --   branches that we are using, but later might include commit
@@ -242,7 +223,7 @@ formatContext ctx = concat $ intersperse ", " $ ctx
 
 getGitConfig :: String -> IO (Maybe String)
 getGitConfig key = do
-  (exit, stdout, _stderr) <- runReadRet ("git config " ++ key)
+  (exit, stdout, _stderr) <- Run.runReadRet ("git config " ++ key)
   case exit of
     Exit.ExitSuccess -> return (Just stdout)
     _ -> return Nothing
