@@ -7,7 +7,7 @@ The command line options for tmt
 
 module Options where
 
-import Control.Applicative ( some, (<**>) )
+import Control.Applicative ( some, (<**>), (<|>) )
 import qualified Options.Applicative as OA
 
 type Branch = String
@@ -39,12 +39,17 @@ optsParser = OA.subparser (
  <> OA.command "prepend" (OA.info (Prepend <$> OA.strArgument (OA.metavar "BRANCH")) (OA.progDesc "Add a branch to the start of the stack"))
  <> OA.command "remove" (OA.info (Remove <$> OA.strArgument (OA.metavar "BRANCH")) (OA.progDesc "Remove a branch from the stack"))
  <> OA.command "materialise" (OA.info (pure Materialise) (OA.progDesc "Materialise the current stack into the working directory"))
- <> OA.command "materialize" (OA.info (pure Materialise) (OA.progDesc "Materialise the current stack into the working directory")) -- TODO: hide from help?
  <> OA.command "materialise-adhoc" (OA.info (MaterialiseAdhoc <$> remainingArguments "BRANCH") (OA.progDesc "Materialise an adhoc collection of branches without affecting stack state (EXPERIMENTAL)"))
- <> OA.command "materialize-adhoc" (OA.info (MaterialiseAdhoc <$> remainingArguments "BRANCH") (OA.progDesc "Materialise an adhoc collection of branches without affecting stack state (EXPERIMENTAL)"))
  <> OA.command "status" (OA.info (pure Status) (OA.progDesc "Show status"))
  <> OA.command "on" (OA.info (On <$> onArguments) (OA.progDesc "Show status"))
   )
+  <|>
+  OA.subparser (
+    OA.command "materialize-adhoc" (OA.info (MaterialiseAdhoc <$> remainingArguments "BRANCH") (OA.progDesc "Materialise an adhoc collection of branches without affecting stack state (EXPERIMENTAL)"))
+ <> OA.command "materialize" (OA.info (pure Materialise) (OA.progDesc "Materialise the current stack into the working directory")) -- TODO: hide from help?
+ <> OA.commandGroup "Transatlantic aliases:"
+  )
+
 
 remainingArguments :: String -> OA.Parser [String]
 remainingArguments metastr = some (OA.strArgument (OA.metavar metastr))
