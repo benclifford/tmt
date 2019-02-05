@@ -43,6 +43,7 @@ executables:
     dependencies:
     - tmt
     - ansi-terminal
+    - optparse-applicative
 
 tests:
   tmt-test:

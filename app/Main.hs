@@ -7,10 +7,11 @@ import Control.Monad (void, when)
 import Data.List (intersperse)
 import Data.Traversable (for)
 import qualified System.Console.ANSI as ANSI
-import System.Environment (getArgs)
 import qualified System.IO as IO
 import qualified System.Exit as Exit
 import qualified System.Process as Process
+
+import qualified Options
 
 main :: IO ()
 main = do
@@ -23,24 +24,17 @@ main = do
   -- that can be a serialised Haskell value for now, in pwd
   -- but should go in .git eventually.
 
-  args <- getArgs
+  cli <- Options.getCommandLine
 
-  when (length args == 0) $ error "Must supply a tmt subcommand"
-  let cmd = args !! 0
-
-  if
-    | cmd == "init" -> initContext
-    | cmd == "add" -> withContext $ \ctx -> addBranch ctx (args !! 1)
-    | cmd == "prepend" -> withContext $ \ctx -> prependBranch ctx (args !! 1)
-    | cmd == "remove" -> withContext $ \ctx -> removeBranch ctx (args !! 1)
-    | cmd == "materialise" -> withContext $ \ctx -> materialiseContext ctx
-    | cmd == "materialize" -> withContext $ \ctx -> materialiseContext ctx
-    | cmd == "materialise-adhoc" -> materialiseAdhocContext (tail args)
-    | cmd == "materialize-adhoc" -> materialiseAdhocContext (tail args)
-    | cmd == "status" -> withContext $ \ctx -> showStatus ctx
-    | cmd == "on" -> withContext $ \ctx -> runOn (tail args) ctx
-    | True -> error $ "Unknown command: " ++ cmd
-
+  case cli of
+    Options.Init -> initContext
+    Options.Add b -> withContext $ \ctx -> addBranch ctx b
+    Options.Prepend b -> withContext $ \ctx -> prependBranch ctx b
+    Options.Remove b -> withContext $ \ctx -> removeBranch ctx b
+    Options.Materialise -> withContext $ \ctx -> materialiseContext ctx
+    Options.MaterialiseAdhoc bs -> materialiseAdhocContext bs
+    Options.Status -> withContext $ \ctx -> showStatus ctx
+    Options.On rest ->  withContext $ \ctx -> runOn rest ctx
 
 initContext :: IO ()
 initContext = do
