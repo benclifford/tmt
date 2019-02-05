@@ -97,7 +97,7 @@ optsParser = OA.hsubparser (
                         (OA.progDesc "Materialise the current stack into the working directory")) -- TODO: hide from help?
 
  <> OA.commandGroup "Transatlantic aliases:"
-
+ <> OA.hidden
  )
 
 
