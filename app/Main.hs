@@ -152,10 +152,6 @@ materialiseContext ctx = do
 
   run $ "git checkout --detach " ++ head ctx
 
-  -- TODO: for each entry in tail of context, merge in that
-  --       entry - unlike the HEAD, it doesn't need to be resolved
-  --       to a commit ID.
-
   void $ for (tail ctx) $ \branch -> do
     let msg = "tmt: merging in " ++ branch
     mergeRerere msg branch
