@@ -16,7 +16,6 @@ import Types
 
 main :: IO ()
 main = do
-  logDebug "temporary merge tool"
 
   -- there should be a tmt context
   -- that knows which branches we've claimed to put in
@@ -26,6 +25,8 @@ main = do
   -- but should go in .git eventually.
 
   cli <- Options.getCommandLine
+
+  logDebug "temporary merge tool"
 
   case cli of
     Options.Init -> initContext
