@@ -76,6 +76,20 @@ into your work directory, and commit a change onto any of those
 branches. Regular git commands let you share those branches with
 other developers.
 
+# Command-line completion
+
+`bash` commandline completion can be enabled by typing:
+
+```
+ source <(tmt --bash-completion-script $(which tmt))
+```
+
+In theory, completion is also available for zsh and
+fish using --zsh-completion-script and --fish-completion-script.
+
+This uses the optparse-applicative library. More information on how
+that library handles command line completion is here:
+https://github.com/pcapriotti/optparse-applicative#bash-zsh-and-fish-completions
 
 # License
 
