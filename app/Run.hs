@@ -22,6 +22,10 @@ runRead command = do
   putStrLn $ "+ " ++ command
   Process.readCreateProcess (Process.shell command) ""
 
+runReadNoTrace :: String -> IO String
+runReadNoTrace command = do
+  Process.readCreateProcess (Process.shell command) ""
+
 runReadRet :: String -> IO (Exit.ExitCode, String, String)
 runReadRet command = do
   putStrLn $ "+ " ++ command
