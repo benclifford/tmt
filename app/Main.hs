@@ -12,6 +12,7 @@ import qualified System.Exit as Exit
 import qualified System.Process as Process
 
 import qualified Options
+import Types
 
 main :: IO ()
 main = do
@@ -213,8 +214,6 @@ runReadRet :: String -> IO (Exit.ExitCode, String, String)
 runReadRet command = do
   putStrLn $ "+ " ++ command
   Process.readCreateProcessWithExitCode (Process.shell command) ""
-
-type BranchName = String
 
 -- | Represents the stored context. At present, that is the list of
 --   branches that we are using, but later might include commit

@@ -10,15 +10,15 @@ module Options where
 import Control.Applicative ( some, (<**>), (<|>) )
 import qualified Options.Applicative as OA
 
-type Branch = String
+import Types
 
 data CommandLine
   = Init
-  | Add Branch
-  | Prepend Branch
-  | Remove Branch
+  | Add BranchName
+  | Prepend BranchName
+  | Remove BranchName
   | Materialise
-  | MaterialiseAdhoc [Branch]
+  | MaterialiseAdhoc [BranchName]
   | Status
   | On [String]
 
