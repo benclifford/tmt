@@ -191,7 +191,10 @@ mergeRerere msg branch = do
         if | remainingExit == Exit.ExitSuccess && rerereStdout == "" -> do
                logInfo "git rerere reports no remaining conflicts, so committing"
                Run.run $ "git commit -a -m '" ++ msg ++ " -- attempted rerere fix'"
-           | True -> error "rerere was not able to fix everything"
+           | True -> do
+               logError "rerere was not able to fix everything"
+               logInfo $ "Files still in need of resolution:\n" ++ rerereStdout
+               Exit.exitWith (Exit.ExitFailure 1)
 
 -- | Represents the stored context. At present, that is the list of
 --   branches that we are using, but later might include commit
