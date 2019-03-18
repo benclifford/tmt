@@ -190,7 +190,7 @@ mergeRerere msg branch = do
         (remainingExit,rerereStdout,_rerereStderr) <- Run.runReadRet "git rerere remaining"
         if | remainingExit == Exit.ExitSuccess && rerereStdout == "" -> do
                logInfo "git rerere reports no remaining conflicts, so committing"
-               Run.run $ "git commit -a -m '" ++ msg ++ " -- attempted rerere fix'"
+               Run.run $ "git commit -a --untracked-files=no -m '" ++ msg ++ " -- attempted rerere fix'"
            | True -> do
                logError "rerere was not able to fix everything"
                logInfo $ "Files still in need of resolution:\n" ++ rerereStdout
