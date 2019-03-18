@@ -39,6 +39,8 @@ main = do
     Options.Status -> withContext $ \ctx -> showStatus ctx
     Options.On rest ->  withContext $ \ctx -> runOn rest ctx
 
+  logOK "Ended OK."
+
 initContext :: IO ()
 initContext = do
   -- TODO: should check that there isn't a context already
@@ -253,6 +255,13 @@ logDebug msg =
   logWithSGR
     [ANSI.Reset, ANSI.SetColor ANSI.Foreground ANSI.Dull ANSI.Yellow]
     msg
+
+logOK :: String -> IO ()
+logOK msg = 
+  logWithSGR
+    [ANSI.Reset, ANSI.SetColor ANSI.Foreground ANSI.Dull ANSI.Green]
+    msg
+
 
 logWithSGR :: [ANSI.SGR] -> String -> IO ()
 logWithSGR sgr msg = do
